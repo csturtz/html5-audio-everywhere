@@ -65,7 +65,6 @@ function supportType(audioType) {
 			id    : "",
 			ogg   : "",
 			mp3   : "",
-			loop  : false,
 			volume: 10
 		},
 		sounds           : {},
@@ -133,7 +132,6 @@ function supportType(audioType) {
 				return;
 
 			var sID = soundEl.id ? soundEl.id : (typeof sound == "string" ? sound : sound.mp3.split(".")[0].asId());
-			var loop = soundEl.loop ? soundEl.loop : $.mbAudio.defaults.loop;
 			var volume = typeof soundEl.volume == "number" ? soundEl.volume : $.mbAudio.defaults.volume;
 			volume = volume > 10 ? 10 : volume;
 
@@ -150,43 +148,16 @@ function supportType(audioType) {
 
 			$(player).off("ended." + sID + ",paused." + sID);
 
-			if (loop) {
+			$(player).on("ended." + sID + ",paused." + sID, function () {
 
-				$(player).one("ended." + sID + ",paused." + sID, function () {
-					this.currentTime = 0;
+				$.mbAudio.playing.splice(sID, 1);
+				delete player.isPlaying;
 
-					if (typeof loop == "number") {
-						if (typeof player.counter == "undefined")
-							player.counter = 0;
+				if (typeof callback == "function")
+					callback(player);
 
-						player.counter++;
-
-						if (player.counter === loop) {
-							delete player.counter;
-							$.mbAudio.playing.splice(sID, 1);
-							delete player.isPlaying;
-							if (typeof callback == "function")
-								callback(player);
-							return;
-						}
-					}
-
-					$.mbAudio.play(sound, callback);
-				});
-
-			} else {
-
-				$(player).on("ended." + sID + ",paused." + sID, function () {
-
-					$.mbAudio.playing.splice(sID, 1);
-					delete player.isPlaying;
-
-					if (typeof callback == "function")
-						callback(player);
-
-				});
-			}
-
+			});
+			
 			player.pause();
 			
 			player.play();
