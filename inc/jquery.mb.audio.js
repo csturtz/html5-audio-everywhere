@@ -125,7 +125,7 @@ function supportType(audioType) {
 			$(document).trigger("soundsLoaded");
 		},
 
-		play: function (sound, sprite, callback) {
+		play: function (sound, callback) {
 
 			var soundEl = typeof sound == "string" ? $.mbAudio.sounds[sound] : sound;
 
@@ -150,41 +150,6 @@ function supportType(audioType) {
 
 			$(player).off("ended." + sID + ",paused." + sID);
 
-			if (typeof sprite == "undefined")
-				sprite = true;
-
-			/*Manage sprite*/
-
-			if (sprite && (typeof sprite == "string" || typeof sprite == "object")) {
-
-				sprite = typeof sprite == "string" ? soundEl.sprite[sprite] : sprite;
-
-				clearTimeout(player.timeOut);
-
-				if (!isAndroid && player.seekable.length == 0) {
-
-					//	We are not crazy; this is to start loading audio
-/*
-					player.play();
-					if (!isMoz)
-*/
-						player.pause();
-
-					var getSeekable = setInterval(function () {
-
-						if (player.seekable.length > 0 && player.seekable.end(0) >= sprite.end - 1) {
-
-							clearInterval(getSeekable);
-							$.mbAudio.manageSprite(player, sID, sound, sprite, callback);
-						}
-					}, 1)
-
-				} else {
-					$.mbAudio.manageSprite(player, sID, sound, sprite, callback);
-				}
-				return;
-			}
-
 			if (loop) {
 
 				$(player).one("ended." + sID + ",paused." + sID, function () {
@@ -206,7 +171,7 @@ function supportType(audioType) {
 						}
 					}
 
-					$.mbAudio.play(sound, sprite, callback);
+					$.mbAudio.play(sound, callback);
 				});
 
 			} else {
@@ -223,66 +188,13 @@ function supportType(audioType) {
 			}
 
 			player.pause();
-			if (player.currentTime && sprite)
-				player.currentTime = 0;
-
+			
 			player.play();
 
 			var idx = jQuery.inArray(sID, $.mbAudio.playing);
 			$.mbAudio.playing.splice(idx, 1);
 			$.mbAudio.playing.push(sID);
 			player.isPlaying = true;
-		},
-
-		manageSprite: function (player, sID, sound, sprite, callback) {
-
-			player.pause();
-
-			function checkStart(player, sID, sound, sprite, callback){
-				player.currentTime = sprite.start;
-
-				if (player.currentTime != sprite.start){
-
-					checkStart(player, sID, sound, sprite, callback);
-
-				}else{
-					playerPlay(player, sID, sound, sprite, callback);
-				}
-			}
-			checkStart(player, sID, sound, sprite, callback);
-			function playerPlay(player, sID, sound, sprite, callback) {
-				var delay = ((sprite.end - sprite.start) * 1000) + 100;
-				var canFireCallback = true;
-				player.play();
-				player.isPlaying = true;
-				player.timeOut = setTimeout(function () {
-					if (sprite.loop) {
-						canFireCallback = false;
-						sprite.loop = sprite.loop == true ? 9999 : sprite.loop;
-						if (!player.counter)
-							player.counter = 1;
-						if (player.counter != sprite.loop && player.isPlaying) {
-							player.counter++;
-							player.currentTime = sprite.start || 0;
-							$.mbAudio.play(sound, sprite, callback);
-						} else {
-							player.counter = 0;
-							canFireCallback = true;
-							player.pause();
-							delete player.isPlaying;
-						}
-					} else {
-						player.pause();
-						delete player.isPlaying;
-					}
-					if (canFireCallback && typeof callback == "function")
-						callback(player);
-					var idx = jQuery.inArray(sID, $.mbAudio.playing);
-					$.mbAudio.playing.splice(idx, 1);
-				}, delay);
-				$.mbAudio.playing.push(sID);
-				player.isPlaying = true;
-			}
 		},
 
 		stop: function (sound, callback) {
@@ -413,7 +325,7 @@ function supportType(audioType) {
 
 		},
 
-		fadeIn: function (sound, sprite, duration, callback) {
+		fadeIn: function (sound, duration, callback) {
 
 			if (!duration)
 				duration = 3000;
