@@ -10,12 +10,18 @@
  *  blog:	http://pupunzi.open-lab.com
  * 	http://open-lab.com
  *
+ *  Modified Work Copyright (c) 2014. Chad Sturtz;
+ *  email: sturtz70@gmail.com
+ *
  *  Licences: MIT, GPL
  *  http://www.opensource.org/licenses/mit-license.php
  *  http://www.gnu.org/licenses/gpl.html
  *
- *  last modified: 07/01/14 22.50
+ *  last modified: 10/10/2014
  *  *****************************************************************************
+ *
+ *
+ *  Modifications by Chad Sturtz
  */
 
 /*
@@ -507,131 +513,6 @@ function supportType(audioType) {
 			}, 0);
 		},
 
-		queue: {
-			isStarted: false,
-
-			add: function (soundID, sprite, callback, hasPriority) {
-
-				var channelName = typeof soundID == "string" ? soundID : soundID.mp3.split(".")[0].asId();
-				var c = $.mbAudio.queue.get(channelName);
-				if (c == null)
-					c = new Channel(soundID);
-
-				var soundEl = typeof soundID == "string" ? $.mbAudio.sounds[soundID] : soundID;
-
-				if (!soundEl.started) {
-					$.mbAudio.pause(soundID);
-					soundEl.started = true;
-				}
-
-				sprite = typeof sprite == "string" ? soundEl.sprite[sprite] : sprite;
-
-				var sEL = {};
-
-				sEL.soundID = soundID;
-				sEL.sprite = sprite;
-				sEL.channel = c;
-				sEL.hasPriority = hasPriority;
-				sEL.callback = callback;
-
-				if (!$.mbAudio.queue.isStarted)
-					$.mbAudio.queue.startEngine();
-
-				if (!$.mbAudio.soundsMutedByHand) {
-					if (sEL.hasPriority) {
-						sEL.channel.playingSounds.splice(0, 1);
-						sEL.channel.soundInPlay = null;
-						c.playingSounds.unshift(sEL);
-					} else {
-						c.playingSounds.push(sEL);
-					}
-				}
-			},
-
-			get: function (name) {
-				for (var i in $.mbAudio.ch) {
-					if ($.mbAudio.ch[i].name == name)
-						return $.mbAudio.ch[i];
-				}
-			},
-
-			manage: function () {
-
-				function manageQueue(channel) {
-
-					if (channel.soundInPlay == null && channel.playingSounds && channel.playingSounds.length > 0 && !$.mbAudio.soundsMutedByHand && !channel.isMuted) {
-						channel.soundInPlay = channel.playingSounds[0];
-
-						function callback() {
-							if (typeof channel.soundInPlay.callback == "function")
-								channel.soundInPlay.callback();
-
-							channel.playingSounds.splice(0, 1);
-							channel.soundInPlay = null;
-
-
-						}
-
-						$.mbAudio.play(channel.soundInPlay.soundID, channel.soundInPlay.sprite, callback);
-
-					} else if (channel.soundInPlay != null && channel.soundInPlay.soundID && ($.mbAudio.soundsMutedByHand || channel.isMuted)) {
-						$.mbAudio.pause(channel.soundInPlay.soundID);
-						channel.playingSounds = [];
-						channel.playingSounds.unshift(channel.soundInPlay);
-						channel.soundInPlay = null;
-					}
-				}
-
-				for (var ci in $.mbAudio.ch) {
-					var channel = $.mbAudio.ch[ci];
-					manageQueue(channel);
-				}
-
-			},
-
-			mute: function (channel) {
-				if (!channel)
-					$.mbAudio.soundsMutedByHand = true;
-				else {
-					var ch = $.mbAudio.queue.get(channel);
-					if (ch)
-						ch.isMuted = true;
-					$.mbAudio.pause(channel)
-
-				}
-
-			},
-
-			unMute: function (channel) {
-				if (!channel)
-					$.mbAudio.soundsMutedByHand = false;
-				else {
-					var ch = $.mbAudio.queue.get(channel);
-					if (ch)
-						ch.isMuted = false;
-				}
-			},
-
-			clear: function (name) {
-				var channel = $.mbAudio.queue.get(name);
-				if (channel) {
-					if (channel.soundInPlay != null)
-						$.mbAudio.pause(channel.soundInPlay.soundID);
-					channel.soundInPlay = null;
-					channel.playingSounds = [];
-				}
-			},
-
-			startEngine: function () {
-				$.mbAudio.channelsEngine = setInterval($.mbAudio.queue.manage, 1);
-				$.mbAudio.queue.isStarted = true;
-			},
-
-			stopEngine: function () {
-				clearInterval($.mbAudio.channelsEngine);
-				$.mbAudio.queue.isStarted = false;
-			}
-		}
 	};
 
 	function Channel(soundID) {
