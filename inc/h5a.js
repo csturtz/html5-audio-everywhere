@@ -28,6 +28,13 @@
 		, isDevice
 		, isChrome
 		, isMoz
+		, defaults
+		, sounds
+		, players
+		, loaded
+		, playing
+		, ch
+		, soundsMutedByHand
 		;
 
 	// Browser & Device Detection
@@ -39,5 +46,20 @@
 	isDevice = 'ontouchstart' in window;
 	isChrome = "chrome" in window;
 	isMoz = "mozAnimationStartTime" in window;
+
+	// Misc Var Initialization
+	defaults = {
+		id    : "",
+		ogg   : "",
+		mp3   : "",
+		volume: 10
+	};
+	sounds = {};
+	players = {};
+	loaded = {};
+	playing = [];
+	ch = [];
+	soundsMutedByHand = false;
+
 
 })();
