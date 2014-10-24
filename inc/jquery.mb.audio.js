@@ -10,12 +10,18 @@
  *  blog:	http://pupunzi.open-lab.com
  * 	http://open-lab.com
  *
+ *  Modified Work Copyright (c) 2014. Chad Sturtz;
+ *  email: sturtz70@gmail.com
+ *
  *  Licences: MIT, GPL
  *  http://www.opensource.org/licenses/mit-license.php
  *  http://www.gnu.org/licenses/gpl.html
  *
- *  last modified: 07/01/14 22.50
+ *  last modified: 10/10/2014
  *  *****************************************************************************
+ *
+ *
+ *  Modifications by Chad Sturtz
  */
 
 /*
@@ -59,7 +65,6 @@ function supportType(audioType) {
 			id    : "",
 			ogg   : "",
 			mp3   : "",
-			loop  : false,
 			volume: 10
 		},
 		sounds           : {},
@@ -119,7 +124,7 @@ function supportType(audioType) {
 			$(document).trigger("soundsLoaded");
 		},
 
-		play: function (sound, sprite, callback) {
+		play: function (sound, callback) {
 
 			var soundEl = typeof sound == "string" ? $.mbAudio.sounds[sound] : sound;
 
@@ -127,7 +132,6 @@ function supportType(audioType) {
 				return;
 
 			var sID = soundEl.id ? soundEl.id : (typeof sound == "string" ? sound : sound.mp3.split(".")[0].asId());
-			var loop = soundEl.loop ? soundEl.loop : $.mbAudio.defaults.loop;
 			var volume = typeof soundEl.volume == "number" ? soundEl.volume : $.mbAudio.defaults.volume;
 			volume = volume > 10 ? 10 : volume;
 
@@ -144,139 +148,24 @@ function supportType(audioType) {
 
 			$(player).off("ended." + sID + ",paused." + sID);
 
-			if (typeof sprite == "undefined")
-				sprite = true;
+			$(player).on("ended." + sID + ",paused." + sID, function () {
 
-			/*Manage sprite*/
+				$.mbAudio.playing.splice(sID, 1);
+				delete player.isPlaying;
 
-			if (sprite && (typeof sprite == "string" || typeof sprite == "object")) {
+				if (typeof callback == "function")
+					callback(player);
 
-				sprite = typeof sprite == "string" ? soundEl.sprite[sprite] : sprite;
-
-				clearTimeout(player.timeOut);
-
-				if (!isAndroid && player.seekable.length == 0) {
-
-					//	We are not crazy; this is to start loading audio
-/*
-					player.play();
-					if (!isMoz)
-*/
-						player.pause();
-
-					var getSeekable = setInterval(function () {
-
-						if (player.seekable.length > 0 && player.seekable.end(0) >= sprite.end - 1) {
-
-							clearInterval(getSeekable);
-							$.mbAudio.manageSprite(player, sID, sound, sprite, callback);
-						}
-					}, 1)
-
-				} else {
-					$.mbAudio.manageSprite(player, sID, sound, sprite, callback);
-				}
-				return;
-			}
-
-			if (loop) {
-
-				$(player).one("ended." + sID + ",paused." + sID, function () {
-					this.currentTime = 0;
-
-					if (typeof loop == "number") {
-						if (typeof player.counter == "undefined")
-							player.counter = 0;
-
-						player.counter++;
-
-						if (player.counter === loop) {
-							delete player.counter;
-							$.mbAudio.playing.splice(sID, 1);
-							delete player.isPlaying;
-							if (typeof callback == "function")
-								callback(player);
-							return;
-						}
-					}
-
-					$.mbAudio.play(sound, sprite, callback);
-				});
-
-			} else {
-
-				$(player).on("ended." + sID + ",paused." + sID, function () {
-
-					$.mbAudio.playing.splice(sID, 1);
-					delete player.isPlaying;
-
-					if (typeof callback == "function")
-						callback(player);
-
-				});
-			}
-
+			});
+			
 			player.pause();
-			if (player.currentTime && sprite)
-				player.currentTime = 0;
-
+			
 			player.play();
 
 			var idx = jQuery.inArray(sID, $.mbAudio.playing);
 			$.mbAudio.playing.splice(idx, 1);
 			$.mbAudio.playing.push(sID);
 			player.isPlaying = true;
-		},
-
-		manageSprite: function (player, sID, sound, sprite, callback) {
-
-			player.pause();
-
-			function checkStart(player, sID, sound, sprite, callback){
-				player.currentTime = sprite.start;
-
-				if (player.currentTime != sprite.start){
-
-					checkStart(player, sID, sound, sprite, callback);
-
-				}else{
-					playerPlay(player, sID, sound, sprite, callback);
-				}
-			}
-			checkStart(player, sID, sound, sprite, callback);
-			function playerPlay(player, sID, sound, sprite, callback) {
-				var delay = ((sprite.end - sprite.start) * 1000) + 100;
-				var canFireCallback = true;
-				player.play();
-				player.isPlaying = true;
-				player.timeOut = setTimeout(function () {
-					if (sprite.loop) {
-						canFireCallback = false;
-						sprite.loop = sprite.loop == true ? 9999 : sprite.loop;
-						if (!player.counter)
-							player.counter = 1;
-						if (player.counter != sprite.loop && player.isPlaying) {
-							player.counter++;
-							player.currentTime = sprite.start || 0;
-							$.mbAudio.play(sound, sprite, callback);
-						} else {
-							player.counter = 0;
-							canFireCallback = true;
-							player.pause();
-							delete player.isPlaying;
-						}
-					} else {
-						player.pause();
-						delete player.isPlaying;
-					}
-					if (canFireCallback && typeof callback == "function")
-						callback(player);
-					var idx = jQuery.inArray(sID, $.mbAudio.playing);
-					$.mbAudio.playing.splice(idx, 1);
-				}, delay);
-				$.mbAudio.playing.push(sID);
-				player.isPlaying = true;
-			}
 		},
 
 		stop: function (sound, callback) {
@@ -407,7 +296,7 @@ function supportType(audioType) {
 
 		},
 
-		fadeIn: function (sound, sprite, duration, callback) {
+		fadeIn: function (sound, duration, callback) {
 
 			if (!duration)
 				duration = 3000;
@@ -507,131 +396,6 @@ function supportType(audioType) {
 			}, 0);
 		},
 
-		queue: {
-			isStarted: false,
-
-			add: function (soundID, sprite, callback, hasPriority) {
-
-				var channelName = typeof soundID == "string" ? soundID : soundID.mp3.split(".")[0].asId();
-				var c = $.mbAudio.queue.get(channelName);
-				if (c == null)
-					c = new Channel(soundID);
-
-				var soundEl = typeof soundID == "string" ? $.mbAudio.sounds[soundID] : soundID;
-
-				if (!soundEl.started) {
-					$.mbAudio.pause(soundID);
-					soundEl.started = true;
-				}
-
-				sprite = typeof sprite == "string" ? soundEl.sprite[sprite] : sprite;
-
-				var sEL = {};
-
-				sEL.soundID = soundID;
-				sEL.sprite = sprite;
-				sEL.channel = c;
-				sEL.hasPriority = hasPriority;
-				sEL.callback = callback;
-
-				if (!$.mbAudio.queue.isStarted)
-					$.mbAudio.queue.startEngine();
-
-				if (!$.mbAudio.soundsMutedByHand) {
-					if (sEL.hasPriority) {
-						sEL.channel.playingSounds.splice(0, 1);
-						sEL.channel.soundInPlay = null;
-						c.playingSounds.unshift(sEL);
-					} else {
-						c.playingSounds.push(sEL);
-					}
-				}
-			},
-
-			get: function (name) {
-				for (var i in $.mbAudio.ch) {
-					if ($.mbAudio.ch[i].name == name)
-						return $.mbAudio.ch[i];
-				}
-			},
-
-			manage: function () {
-
-				function manageQueue(channel) {
-
-					if (channel.soundInPlay == null && channel.playingSounds && channel.playingSounds.length > 0 && !$.mbAudio.soundsMutedByHand && !channel.isMuted) {
-						channel.soundInPlay = channel.playingSounds[0];
-
-						function callback() {
-							if (typeof channel.soundInPlay.callback == "function")
-								channel.soundInPlay.callback();
-
-							channel.playingSounds.splice(0, 1);
-							channel.soundInPlay = null;
-
-
-						}
-
-						$.mbAudio.play(channel.soundInPlay.soundID, channel.soundInPlay.sprite, callback);
-
-					} else if (channel.soundInPlay != null && channel.soundInPlay.soundID && ($.mbAudio.soundsMutedByHand || channel.isMuted)) {
-						$.mbAudio.pause(channel.soundInPlay.soundID);
-						channel.playingSounds = [];
-						channel.playingSounds.unshift(channel.soundInPlay);
-						channel.soundInPlay = null;
-					}
-				}
-
-				for (var ci in $.mbAudio.ch) {
-					var channel = $.mbAudio.ch[ci];
-					manageQueue(channel);
-				}
-
-			},
-
-			mute: function (channel) {
-				if (!channel)
-					$.mbAudio.soundsMutedByHand = true;
-				else {
-					var ch = $.mbAudio.queue.get(channel);
-					if (ch)
-						ch.isMuted = true;
-					$.mbAudio.pause(channel)
-
-				}
-
-			},
-
-			unMute: function (channel) {
-				if (!channel)
-					$.mbAudio.soundsMutedByHand = false;
-				else {
-					var ch = $.mbAudio.queue.get(channel);
-					if (ch)
-						ch.isMuted = false;
-				}
-			},
-
-			clear: function (name) {
-				var channel = $.mbAudio.queue.get(name);
-				if (channel) {
-					if (channel.soundInPlay != null)
-						$.mbAudio.pause(channel.soundInPlay.soundID);
-					channel.soundInPlay = null;
-					channel.playingSounds = [];
-				}
-			},
-
-			startEngine: function () {
-				$.mbAudio.channelsEngine = setInterval($.mbAudio.queue.manage, 1);
-				$.mbAudio.queue.isStarted = true;
-			},
-
-			stopEngine: function () {
-				clearInterval($.mbAudio.channelsEngine);
-				$.mbAudio.queue.isStarted = false;
-			}
-		}
 	};
 
 	function Channel(soundID) {
