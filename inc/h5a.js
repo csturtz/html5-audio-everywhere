@@ -28,14 +28,6 @@
 		, isDevice
 		, isChrome
 		, isMoz
-		, defaults
-		, sounds
-		, players
-		, loaded
-		, playing
-		, ch
-		, soundsMutedByHand
-		, initComplete
 		;
 
 	// Browser & Device Detection
@@ -48,59 +40,43 @@
 	isChrome = "chrome" in window;
 	isMoz = "mozAnimationStartTime" in window;
 
-	// Misc Var Initialization
-	defaults = {
-		id    : "",
-		ogg   : "",
-		mp3   : "",
-		volume: 10
-	};
-	sounds = {};
-	players = {};
-	loaded = {};
-	playing = [];
-	ch = [];
-	soundsMutedByHand = false;
-	initComplete = false;
-
-
-	// functions
-	function init() {
-		if (initComplete) return;
-
-		$(window).on("blur",function () {
-				soundsMutedByHand = true;
-				muteAllPlayers();
-			}).on("focus", function () {
-				soundsMutedByHand = false;
-				unMuteAllPlayers();
-			});
-
-		$.mbAudio.isInit = true;
-	};
-
-	function muteAllPlayers(){
-		for (var player in players) {
-			player.vol = player.volume * 10;
-			player.volume = 0;
-		}
-	};
-	
-	function unMuteAllPlayers(){
-		for (var player in players) {
-			player.volume = player.vol / 10;
-		}
-	};
-
-
 	// Player Object
-	return funtion(options){
-		var id;
+	return funtion(url){
+		var   id
+			, loaded = false
+			;
 
-		id = generatePlayerId();
-		players[id] = this;
+		this.audio = new Audio(url);
+		
+		this.load = function(){
+			if (loaded) return;
 
+			this.audio.load();
+			this.audio.pause();
 
+			loaded = true;
+		};
+
+		this.play = function(){
+			if (!loaded) this.load();
+
+			this.audio.pause();
+			this.audio.play();
+		};
+
+		this.pause = function(){
+			this.audio.pause();
+			clearTimeout(audio.timeOut);
+		};
+
+		this.stop = function(){
+			this.audio.pause();
+			if (this.audio.currentTime)
+				this.audio.currentTime = 0;
+		};
+
+		// Preload
+		this.load();
 	};
 	
 })();
