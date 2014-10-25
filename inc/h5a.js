@@ -35,6 +35,7 @@
 		, playing
 		, ch
 		, soundsMutedByHand
+		, initComplete
 		;
 
 	// Browser & Device Detection
@@ -60,6 +61,25 @@
 	playing = [];
 	ch = [];
 	soundsMutedByHand = false;
+	initComplete = false;
 
+
+	// functions
+	function init() {
+		if (initComplete) return;
+
+		$(window).on("blur",function () {
+				soundsMutedByHand = true;
+				muteAllSounds();
+			}).on("focus", function () {
+				soundsMutedByHand = false;
+				unMuteAllSounds();
+			});
+
+		$.mbAudio.isInit = true;
+	};
+
+	function muteAllSounds(){};
+	function unMuteAllSounds(){};
 
 })();
