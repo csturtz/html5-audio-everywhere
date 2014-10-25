@@ -18,7 +18,6 @@
  *  *****************************************************************************
  *
  */
-
 ;var H5A = (function(){
 	var   ua
 		, isAndroid
@@ -41,7 +40,7 @@
 	isMoz = "mozAnimationStartTime" in window;
 
 	// Player Object
-	return funtion(url){
+	return function(url){
 		var   id
 			, loaded = false
 			;
@@ -66,7 +65,7 @@
 
 		this.pause = function(){
 			this.audio.pause();
-			clearTimeout(audio.timeOut);
+			clearTimeout(this.audio.timeOut);
 		};
 
 		this.stop = function(){
