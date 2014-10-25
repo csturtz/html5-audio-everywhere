@@ -19,7 +19,7 @@
  *
  */
 
-;(function(){
+;var H5A = (function(){
 	var   ua
 		, isAndroid
 		, isiOs
@@ -70,16 +70,37 @@
 
 		$(window).on("blur",function () {
 				soundsMutedByHand = true;
-				muteAllSounds();
+				muteAllPlayers();
 			}).on("focus", function () {
 				soundsMutedByHand = false;
-				unMuteAllSounds();
+				unMuteAllPlayers();
 			});
 
 		$.mbAudio.isInit = true;
 	};
 
-	function muteAllSounds(){};
-	function unMuteAllSounds(){};
+	function muteAllPlayers(){
+		for (var player in players) {
+			player.vol = player.volume * 10;
+			player.volume = 0;
+		}
+	};
+	
+	function unMuteAllPlayers(){
+		for (var player in players) {
+			player.volume = player.vol / 10;
+		}
+	};
 
+
+	// Player Object
+	return funtion(options){
+		var id;
+
+		id = generatePlayerId();
+		players[id] = this;
+
+
+	};
+	
 })();
