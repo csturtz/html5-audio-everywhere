@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html ng-app="focused">
+  <head>
+	<base href="/">
+	<style></style>
+  </head>
+  <body>
+  	<button id="play">Play Audio</button>
+  	<button id="stop">Stop Audio</button>
+  	<button id="pause">Pause Audio</button>
+
+  	<script src="home/csturtz/dev/workspace/html5-audio-everywhere/inc/h5a.js"></script>
+  	<script type="text/javascript">
+  		var h5a = new H5A('https://ia802508.us.archive.org/5/items/testmp3testfile/mpthreetest.mp3');
+
+  		var play = document.getElementById('play');
+  		var pause = document.getElementById('pause');
+  		var stop = document.getElementById('stop');
+
+  		play.onclick = function(){
+  			h5a.play();
+  		}
+;
+  		pause.onclick = function(){
+  			h5a.pause();
+  		};
+
+  		stop.onclick = function(){
+  			h5a.stop();
+  		};
+  	</script>
+  </body>
+</html>
